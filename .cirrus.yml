@@ -1,23 +1,30 @@
 env:
-    MANIFEST: https://github.com/RisingTechOSS/android -b fourteen --git-lfs -g default,-mips,-darwin,-notdefault
-    DEVICE: RMX2020
-    OEM: realme
-    DT_LINK: https://github.com/Rinto02/androi_device_realme_RMX2020 -b fourteen
+    MANIFEST: https://github.com/RisingOS-Revived/android -b qpr2 --git-lfs
+
+    OEM: sony
+    DEVICE: pdx215
+    COMMON: sm8350-common
+
+    DT_LINK: https://github.com/lirkyo/device_sony_pdx215 -b RisingOS
     DT_PATH: device/$OEM/$DEVICE
-    VT_LINK: https://github.com/PixelOS-Devices/vendor_realme_RMX2020 -b fourteen
+    DCT_LINK: https://github.com/lirkyo/device_sony_sm8350-common/tree/RisingOS -b RisingOS
+    DCT_PATH: device/$OEM/$COMMON
+
+    VT_LINK: https://github.com/TheMuppets/proprietary_vendor_sony_pdx215 -b lineage-22.2
     VT_PATH: vendor/$OEM/$DEVICE
-    VTI_LINK: https://github.com/PixelOS-Devices/vendor_realme_RMX2020-ims -b fourteen
-    VTI_PATH: vendor/$OEM/RMX2020-ims
-    HW_LINK: https://github.com/lineageOS/android_hardware_mediatek.git -b lineage-21
-    HW_PATH: hardware/mediatek
-    SE_LINK: https://github.com/Rinto02/android_device_mediatek_sepolicy_vndr -b 14.0
-    SE_PATH: device/mediatek/sepolicy_vndr
-    KT_LINK: https://github.com/PixelOS-Devices/kernel_realme_RMX2020 -b fourteen
-    PLATFORM: mt6768
-    KT_PATH: kernel/$OEM/$DEVICE
-    TARGET: bacon
+    VCT_LINK: https://github.com/TheMuppets/proprietary_vendor_sony_sm8350-common -b lineage-22.2
+    VCI_PATH: vendor/$OEM/$COMMON
+
+    HW_LINK: https://github.com/lirkyo/hardware_sony -b fifteen
+    HW_PATH: hardware/$OEM
+
+    KT_LINK: https://github.com/LineageOS/android_kernel_sony_sm8350 -b lineage-22.2
+    KT_PATH: kernel/$OEM/sm8350
+
+    SE_LINK: https://github.com/lirkyo/vendor_sony_extra -b fifteen
+    SE_PATH: vendor/$OEM/extra
+
     EXTRA_CMD: export SKIP_ABI_CHECKS=true
-    LUNCH_COMBO: lineage_${DEVICE}-ap2a-user
     OUTPUT: RisingOS*.zip
 
 task:
@@ -40,11 +47,12 @@ task:
       - mkdir -p ~/work
       - cd ~/work
       - repo init --depth=1 -u $MANIFEST
-      - repo sync -j8 --force-sync --no-tags --no-clone-bundle
+      - repo sync -c --no-clone-bundle --force-sync --no-tags --optimized-fetch --prune -j8
       - git clone --depth=1 $DT_LINK $DT_PATH
+      - git clone --depth=1 $DCT_LINK $DCT_PATH
       - git clone --depth=1 $KT_LINK $KT_PATH
       - git clone --depth=1 $VT_LINK $VT_PATH
-      - git clone --depth=1 $VTI_LINK $VTI_PATH
+      - git clone --depth=1 $VCT_LINK $VCT_PATH
       - git clone --depth=1 $SE_LINK $SE_PATH
       - git clone --depth=1 $HW_LINK $HW_PATH
       - echo "============================"
@@ -64,8 +72,9 @@ task:
       - export CCACHE_EXEC=/usr/bin/ccache
       - ccache -M 50G
       - . build/envsetup.sh
-      - lunch "$LUNCH_COMBO"
-      - riseup RMX2020 user
+      - riseup pdx215 userdebug
+      - gk -s
+      - rise fb
      
   Upload_script:
       - echo "============================"
