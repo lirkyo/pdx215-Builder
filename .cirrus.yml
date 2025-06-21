@@ -7,13 +7,13 @@ env:
 
     DT_LINK: https://github.com/lirkyo/device_sony_pdx215 -b RisingOS
     DT_PATH: device/$OEM/$DEVICE
-    DCT_LINK: https://github.com/lirkyo/device_sony_sm8350-common/tree/RisingOS -b RisingOS
+    DCT_LINK: https://github.com/lirkyo/device_sony_sm8350-common -b RisingOS
     DCT_PATH: device/$OEM/$COMMON
 
     VT_LINK: https://github.com/TheMuppets/proprietary_vendor_sony_pdx215 -b lineage-22.2
     VT_PATH: vendor/$OEM/$DEVICE
     VCT_LINK: https://github.com/TheMuppets/proprietary_vendor_sony_sm8350-common -b lineage-22.2
-    VCI_PATH: vendor/$OEM/$COMMON
+    VCT_PATH: vendor/$OEM/$COMMON
 
     HW_LINK: https://github.com/lirkyo/hardware_sony -b fifteen
     HW_PATH: hardware/$OEM

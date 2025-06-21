@@ -1,0 +1,106 @@
+# 设置整个构建的超时时间，240分钟
+timeout: 10800s
+
+# 为构建步骤配置虚拟机选项
+options:
+  diskSizeGb: 320 # 安卓构建需要较大磁盘空间
+
+# 定义可在构建时覆盖的变量
+substitutions:
+  _OEM: sony
+  _DEVICE: pdx215
+  _COMMON: sm8350-common
+  _MANIFEST: "https://github.com/RisingOS-Revived/android -b qpr2 --git-lfs"
+
+  # 设备树
+  _DT_LINK: "https://github.com/lirkyo/device_sony_pdx215 -b RisingOS"
+
+  # 通用设备树 (修正了原始链接)
+  _DCT_LINK: "https://github.com/lirkyo/device_sony_sm8350-common -b RisingOS"
+
+  # Vendor
+  _VT_LINK: "https://github.com/TheMuppets/proprietary_vendor_sony_pdx215 -b lineage-22.2"
+
+  # 通用 Vendor
+  _VCT_LINK: "https://github.com/TheMuppets/proprietary_vendor_sony_sm8350-common -b lineage-22.2"
+
+  # 硬件抽象层
+  _HW_LINK: "https://github.com/lirkyo/hardware_sony -b fifteen"
+
+  # 内核
+  _KT_LINK: "https://github.com/LineageOS/android_kernel_sony_sm8350 -b lineage-22.2"
+
+  # 额外 Vendor
+  _SE_LINK: "https://github.com/lirkyo/vendor_sony_extra -b fifteen"
+
+  # 构建目标
+  _TARGET: "mka bacon"
+  _EXTRA_CMD: "export SKIP_ABI_CHECKS=true"
+  _OUTPUT: "RisingOS*.zip"
+
+steps:
+  - name: 'ghcr.io/satorugojo2k23/ubuntu:latest'
+    id: '构建安卓 ROM'
+    entrypoint: 'bash'
+    script: |
+      #!/bin/bash
+      # 遇到错误时立即退出
+      set -e
+
+      # --- 检查存储空间 ---
+      echo "============================"
+      echo "检查存储空间..."
+      echo "============================"
+      df -h && lsblk && ls -l -a -h
+
+      # --- 同步源码 ---
+      echo "============================"
+      echo "同步源码..."
+      echo "============================"
+      # Cloud Build 默认在 /workspace 目录工作
+      repo init --depth=1 -u ${_MANIFEST}
+      repo sync -c --no-clone-bundle --force-sync --no-tags --optimized-fetch --prune -j8
+
+      # 根据 substitutions 定义路径
+      DT_PATH="device/${_OEM}/${_DEVICE}"
+      DCT_PATH="device/${_OEM}/${_COMMON}"
+      VT_PATH="vendor/${_OEM}/${_DEVICE}"
+      VCT_PATH="vendor/${_OEM}/${_COMMON}"
+      HW_PATH="hardware/${_OEM}"
+      KT_PATH="kernel/${_OEM}/sm8350"
+      SE_PATH="vendor/${_OEM}/extra"
+
+      git clone --depth=1 ${_DT_LINK} $$DT_PATH
+      git clone --depth=1 ${_DCT_LINK} $$DCT_PATH
+      git clone --depth=1 ${_KT_LINK} $$KT_PATH
+      git clone --depth=1 ${_VT_LINK} $$VT_PATH
+      git clone --depth=1 ${_VCT_LINK} $$VCT_PATH
+      git clone --depth=1 ${_SE_LINK} $$SE_PATH
+      git clone --depth=1 ${_HW_LINK} $$HW_PATH
+      echo "============================"
+      echo "同步完成!"
+      echo "============================"
+
+      # --- 开始构建 ---
+      echo "============================"
+      echo "开始构建..."
+      echo "============================"
+      ${_EXTRA_CMD}
+      export USE_CCACHE=1
+      export CCACHE_EXEC=/usr/bin/ccache
+      ccache -M 50G
+      . build/envsetup.sh
+      riseup ${_DEVICE} userdebug
+      gk -s
+      rise fb
+
+      # --- 上传构建产物 ---
+      echo "============================"
+      echo "上传构建产物..."
+      echo "============================"
+      cd out/target/product/"${_DEVICE}"
+      curl --upload-file $$(echo ${_OUTPUT}) https://transfer.sh | tee link.txt
+      echo "============================"
+      echo "构建产物已上传! 链接如下:"
+      cat link.txt
+      echo "============================"
