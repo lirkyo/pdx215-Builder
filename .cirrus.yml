@@ -24,6 +24,7 @@ env:
     SE_LINK: https://github.com/lirkyo/vendor_sony_extra -b fifteen
     SE_PATH: vendor/$OEM/extra
 
+    TARGET: mka bacon
     EXTRA_CMD: export SKIP_ABI_CHECKS=true
     OUTPUT: RisingOS*.zip
 
